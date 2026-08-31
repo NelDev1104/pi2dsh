@@ -112,21 +112,26 @@ async function fetchJson(url, init) {
 }
 async function startDeviceFlow(domain, signal) {
     const urls = getUrls(domain);
-    const data = await fetchJson(urls.deviceCodeUrl, {
-        method: "POST",
-        headers: {
-            Accept: "application/json",
-            "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "GitHubCopilotChat/0.35.0",
-        },
-        body: new URLSearchParams({
-            client_id: CLIENT_ID,
-            scope: "read:user",
-        }),
-        signal,
-    });
-    if (!data || typeof data !== "object") {
-        throw new Error("Invalid device code response");
+    try {
+        const data = await fetchJson(urls.deviceCodeUrl, {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "GitHubCopilotChat/0.35.0",
+            },
+            body: new URLSearchParams({
+                client_id: CLIENT_ID,
+                scope: "read:user",
+            }),
+            signal,
+        });
+        if (!data || typeof data !== "object") {
+            throw new Error("Invalid device code response");
+        }
+    } catch (error) {
+        console.error("[pi2dsh]: Failed to start GitHub device flow", error);
+        throw new Error("Failed to start GitHub device flow");
     }
     const deviceCode = data.device_code;
     const userCode = data.user_code;
