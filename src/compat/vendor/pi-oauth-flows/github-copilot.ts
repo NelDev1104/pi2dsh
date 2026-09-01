@@ -373,14 +373,7 @@ function copilotEnterpriseDomain(credential) {
 export const githubCopilotOAuth = {
   name: "GitHub Copilot",
   isSubscription: true,
-  login: (interaction) => {
-    try{
-        return loginGitHubCopilot(interaction);
-    } catch (error) {
-      console.error("Error during GitHub Copilot login:", error);
-      throw error;
-    }
-  },
+  login: loginGitHubCopilot,
   refresh: (credential, signal) =>
     refreshGitHubCopilotToken(
       credential.refresh,
