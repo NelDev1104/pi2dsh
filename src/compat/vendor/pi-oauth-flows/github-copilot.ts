@@ -5,6 +5,8 @@
  */
 import { GITHUB_COPILOT_MODELS } from './github-copilot.models.js';
 import { pollOAuthDeviceCodeFlow } from "./device-code.js";
+import { EnvHttpProxyAgent } from 'undici';
+
 const decode = (s) => atob(s);
 const CLIENT_ID = decode("SXYxLmI1MDdhMDhjODdlY2ZlOTg=");
 const COPILOT_HEADERS = {
@@ -26,6 +28,18 @@ function normalizeDomain(input) {
         return null;
     }
 }
+
+// Created once, reused across calls — cheap, and avoids opening
+// a new dispatcher per request.
+let proxyDispatcher: EnvHttpProxyAgent | undefined;
+function getProxyDispatcher(): EnvHttpProxyAgent | undefined {
+  const hasProxyEnv = process.env.HTTPS_PROXY || process.env.HTTP_PROXY
+    || process.env.https_proxy || process.env.http_proxy;
+  if (!hasProxyEnv) return undefined;
+  if (!proxyDispatcher) proxyDispatcher = new EnvHttpProxyAgent();
+  return proxyDispatcher;
+}
+
 function getUrls(domain) {
     return {
         deviceCodeUrl: `https://${domain}/login/device/code`,
@@ -103,7 +117,11 @@ async function fetchAvailableGitHubCopilotModelIds(copilotToken, enterpriseDomai
     return parseAvailableCopilotModelIds(raw, allowPolicyFallback);
 }
 async function fetchJson(url, init) {
-    const response = await fetch(url, init);
+    const dispatcher = getProxyDispatcher();
+    const response = await fetch(url, {
+        ...init,
+        ...(dispatcher ? { dispatcher } : {}),
+    });
     if (!response.ok) {
         const text = await response.text();
         throw new Error(`${response.status} ${response.statusText}: ${text}`);
