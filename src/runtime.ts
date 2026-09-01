@@ -3303,6 +3303,7 @@ async function ensureLoggedInProviderRoute(
   // shadowing the host's own store — the value goes into the host's store
   // instead, and stays fresh through the per-request hook below.
   const published = await publishOAuthCredential(ctx, state, name, config)
+  logger(ctx).info(`[pi2dsh] logged in to ${JSON.stringify(name)}; route ${alreadyRouted ? 'already registered' : 'added'}${published.baseUrl === undefined ? '' : ` with baseURL ${JSON.stringify(published.baseUrl)}`}`)
   if (!published.ok) return false
   keepOAuthCredentialFresh(ctx, state)
   if (alreadyRouted) return false
