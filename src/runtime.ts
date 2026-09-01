@@ -3302,7 +3302,6 @@ async function ensureLoggedInProviderRoute(
   // holds it), so a bridge-owned provider cannot be mounted beside it without
   // shadowing the host's own store — the value goes into the host's store
   // instead, and stays fresh through the per-request hook below.
-  console.log(`[pi2dsh] Config: ${JSON.stringify(config)}, state: ${JSON.stringify(state)}, name: ${name}`)
   const published = await publishOAuthCredential(ctx, state, name, config)
   if (!published.ok) return false
   keepOAuthCredentialFresh(ctx, state)
@@ -3565,7 +3564,6 @@ async function runProviderLogin(
   // Logging in is only half of "I want this gateway's models": the other
   // half is the route. Declared first, so the discovery below (and the
   // count reported to the user) sees it.
-  console.log(`[pi2dsh] ensuring a route for logged-in provider ${JSON.stringify(providerId)}`)
   const declared = await ensureLoggedInProviderRoute(ctx, state, providerId, config)
   const discovered = await discoverProviderModels(ctx, state, providerId, config)
     ?? (declared ? await llmOf(ctx)?.listModels(providerId).then(list => list.length).catch(() => undefined) : undefined)
@@ -3710,10 +3708,9 @@ async function projectAuthorizationFlow(scope: Context, state: RuntimeState, pro
           },
         }
         const canonical = canonicalOf()
+        logger(ctx).info(`[pi2dsh] provider ${providerId} reading credentials ${JSON.stringify(key)}, ${JSON.stringify(await credentials.readRecord(key))}`)
         if (!providerSupportsOAuth(canonical)) throw new Error(`${providerId} no longer supports OAuth login`)
         await runProviderLogin(ctx, state, providerId, canonical, ui, session.signal)
-        console.log(`[pi2dsh] committing the ${providerId} login to the DSH credentials service`)
-        console.log(`[pi2dsh] provider ${providerId} reading credentials ${JSON.stringify(key)}, ${JSON.stringify(await credentials.readRecord(key))}`)
         await credentials.modifyRecord(key, async () => ({
           kind: 'grant',
           payload: { provider: providerId, managedBy: 'pi2dsh' },
