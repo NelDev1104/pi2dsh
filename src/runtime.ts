@@ -1141,6 +1141,7 @@ function contextFor(
     // directory models.
     getProvider: (provider: string) => {
       const base = providerConfig(provider)
+      console.info(`[pi2dsh] getProvider(${provider}): base=${base === undefined ? 'undefined' : JSON.stringify(base)}`)
       if (base !== undefined) {
         const routed = state.providerRouteDisposers.has(provider)
         // A package provider that never became a route keeps its own object:
