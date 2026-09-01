@@ -5,7 +5,7 @@
  */
 import { GITHUB_COPILOT_MODELS } from './github-copilot.models.js';
 import { pollOAuthDeviceCodeFlow } from "./device-code.js";
-import { EnvHttpProxyAgent } from 'undici';
+import { EnvHttpProxyAgent } from 'node:undici';
 
 const decode = (s) => atob(s);
 const CLIENT_ID = decode("SXYxLmI1MDdhMDhjODdlY2ZlOTg=");

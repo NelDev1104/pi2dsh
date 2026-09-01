@@ -171,7 +171,6 @@
     "@vitest/coverage-v8": "^4.1.10",
     "publint": "^0.3.23",
     "tsdown": "^0.22.14",
-    "undici": "^8.10.0",
     "vitest": "^4.1.10"
   },
   "dsh": {
