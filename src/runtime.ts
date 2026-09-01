@@ -3287,10 +3287,8 @@ async function ensureLoggedInProviderRoute(
   // about the credential behind apiKeyEnv (a copied profile, a cleared host
   // store, or a rotated OAuth token can all leave it missing/stale). Publish
   // and arm refresh first, then skip only the redundant settings write.
-  console.log(`[pi2dsh] ensureLoggedInProviderRoute(${JSON.stringify(name)})`)
   const alreadyRouted = llmOf(ctx)?.listProviders().some(provider => provider.id === name) === true
   const credential = await storedOAuthCredential(oauthStoreOf(state), name).catch(() => undefined)
-  console.log(`[pi2dsh] ensureLoggedInProviderRoute(${JSON.stringify(name)}) credential=${credential === undefined ? 'undefined' : 'present'}`)
   if (credential === undefined) return false
   // The route is CONFIGURATION, not transport: the official llm-pi-ai adapter
   // is already mounted and owns this namespace, so the profile goes into its
@@ -3304,6 +3302,7 @@ async function ensureLoggedInProviderRoute(
   // holds it), so a bridge-owned provider cannot be mounted beside it without
   // shadowing the host's own store — the value goes into the host's store
   // instead, and stays fresh through the per-request hook below.
+  console.log(`[pi2dsh] Config: ${JSON.stringify(config)}, state: ${JSON.stringify(state)}, name: ${name}`)
   const published = await publishOAuthCredential(ctx, state, name, config)
   if (!published.ok) return false
   keepOAuthCredentialFresh(ctx, state)
@@ -3713,6 +3712,8 @@ async function projectAuthorizationFlow(scope: Context, state: RuntimeState, pro
         const canonical = canonicalOf()
         if (!providerSupportsOAuth(canonical)) throw new Error(`${providerId} no longer supports OAuth login`)
         await runProviderLogin(ctx, state, providerId, canonical, ui, session.signal)
+        console.log(`[pi2dsh] committing the ${providerId} login to the DSH credentials service`)
+        console.log(`[pi2dsh] provider ${providerId} reading credentials ${JSON.stringify(key)}, ${JSON.stringify(await credentials.readRecord(key))}`)
         await credentials.modifyRecord(key, async () => ({
           kind: 'grant',
           payload: { provider: providerId, managedBy: 'pi2dsh' },
