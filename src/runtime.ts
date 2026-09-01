@@ -3287,8 +3287,10 @@ async function ensureLoggedInProviderRoute(
   // about the credential behind apiKeyEnv (a copied profile, a cleared host
   // store, or a rotated OAuth token can all leave it missing/stale). Publish
   // and arm refresh first, then skip only the redundant settings write.
+  console.log(`[pi2dsh] ensureLoggedInProviderRoute(${JSON.stringify(name)})`)
   const alreadyRouted = llmOf(ctx)?.listProviders().some(provider => provider.id === name) === true
   const credential = await storedOAuthCredential(oauthStoreOf(state), name).catch(() => undefined)
+  console.log(`[pi2dsh] ensureLoggedInProviderRoute(${JSON.stringify(name)}) credential=${credential === undefined ? 'undefined' : 'present'}`)
   if (credential === undefined) return false
   // The route is CONFIGURATION, not transport: the official llm-pi-ai adapter
   // is already mounted and owns this namespace, so the profile goes into its
@@ -3564,6 +3566,7 @@ async function runProviderLogin(
   // Logging in is only half of "I want this gateway's models": the other
   // half is the route. Declared first, so the discovery below (and the
   // count reported to the user) sees it.
+  console.log(`[pi2dsh] ensuring a route for logged-in provider ${JSON.stringify(providerId)}`)
   const declared = await ensureLoggedInProviderRoute(ctx, state, providerId, config)
   const discovered = await discoverProviderModels(ctx, state, providerId, config)
     ?? (declared ? await llmOf(ctx)?.listModels(providerId).then(list => list.length).catch(() => undefined) : undefined)
