@@ -3402,13 +3402,26 @@ async function publishOAuthCredential(
 function keepOAuthCredentialFresh(ctx: Context, state: RuntimeState): void {
   if (state.shared.oauthRefreshHooked === true) return
   state.shared.oauthRefreshHooked = true
+  
   const cordisCtx = ctx as unknown as { on(event: string, handler: (...args: never[]) => unknown): () => void }
-  cordisCtx.on('llm/stream', ((options: UnknownRecord, next: () => AsyncIterable<unknown>) => {
+  cordisCtx.on('llm/stream', ( async (options: UnknownRecord, next: () => AsyncIterable<unknown>) => {
     const provider = typeof options.provider === 'string' ? options.provider : undefined
     const config = provider === undefined ? undefined : state.shared.providers.get(provider)
     if (provider === undefined || config === undefined || !providerSupportsOAuth(config)) return next()
     const publish = (): Promise<unknown> => publishOAuthCredential(ctx, state, provider, config)
       .catch(error => logger(ctx).warn(`[pi2dsh] could not refresh the stored credential for ${JSON.stringify(provider)}: ${error instanceof Error ? error.message : String(error)}`))
+      const auth = await resolvePiProviderAuth({
+        providerId: provider,
+        providerConfig: config,
+        store: oauthStoreOf(state),
+      }).catch(() => undefined)
+      logger(ctx).info(`[pi2dsh] Copilot request route: ${JSON.stringify({
+          provider,
+          model: options.model,
+          baseUrl: auth?.auth?.baseUrl,
+          api: options.api,
+          sessionId: options.sessionId,
+        })}`)
     return (async function* () {
       const stored = await storedOAuthCredential(oauthStoreOf(state), provider).catch(() => undefined)
       const expires = typeof stored?.expires === 'number' ? stored.expires : undefined
