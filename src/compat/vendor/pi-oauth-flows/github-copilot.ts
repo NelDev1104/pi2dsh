@@ -10,8 +10,11 @@ const CLIENT_ID = decode("SXYxLmI1MDdhMDhjODdlY2ZlOTg=");
 import { setGlobalDispatcher, ProxyAgent } from "undici";
 
 if (process.env.https_proxy) {
-  // Corporate proxy uses CA not in undici's certificate store
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  console.info("[pi2dsh] proxy config", {
+    httpsProxy: process.env.https_proxy,
+    httpProxy: process.env.http_proxy,
+    noProxy: process.env.no_proxy,
+  });
   const dispatcher = new ProxyAgent({
     uri: new URL(process.env.https_proxy).toString(),
   });

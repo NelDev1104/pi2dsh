@@ -3419,14 +3419,7 @@ function keepOAuthCredentialFresh(ctx: Context, state: RuntimeState): void {
         providerConfig: config,
         store: oauthStoreOf(state),
       }).catch(() => undefined)
-      logger(ctx).info(`[pi2dsh] Copilot stored auth: ${JSON.stringify(stored)}`)
-      logger(ctx).info(`[pi2dsh] Copilot request route: ${JSON.stringify({
-          provider,
-          model: options.model,
-          baseUrl: auth?.auth?.baseUrl,
-          api: options.api,
-          sessionId: options.sessionId,
-        })}`)
+
       // Expired (or an unstated expiry, which cannot be trusted): this request
       // cannot go out on what is stored, so wait for the renewal.
       if (expires === undefined || expires <= Date.now()) await publish()
